@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="RxVerify">
+<title>RxVerify</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#e8f2fb;--card:#fff;--blue:#2a7de1;--bd:#1a5db8;--bl:#ddeeff;--bx:#f0f7ff;--fi:#f4f8fd;--br:#d4e4f4;--tx:#152338;--t2:#3d5a78;--mu:#7a97b5;--gn:#16a34a;--gb:#dcfce7;--rd:#dc2626;--rb:#fee2e2;--am:#d97706;--ab:#fef3c7;--r:16px;--sh:0 2px 10px rgba(42,125,225,.09);--sl:0 6px 24px rgba(42,125,225,.15);--st:env(safe-area-inset-top,44px);--sb:env(safe-area-inset-bottom,20px)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;font-family:'Nunito',sans-serif;color:var(--tx);background:var(--bg);-webkit-text-size-adjust:100%}
+#app{width:100%;height:100%;max-width:430px;margin:0 auto;display:flex;flex-direction:column;overflow:hidden;position:relative;background:linear-gradient(170deg,#ddeefb 0%,#c8dff7 100%)}
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;background:linear-gradient(170deg,#ddeefb 0%,#c8dff7 100%);transform:translateX(105%);transition:transform .3s cubic-bezier(.4,0,.2,1);overflow:hidden;will-change:transform;z-index:1}
+.screen.active{transform:translateX(0);z-index:2}
+.screen.behind{transform:translateX(-28%)}
+#st{transform:none;display:flex;flex-direction:column;z-index:1;height:100%}
+#st.pushed{transform:translateX(-28%);transition:transform .3s cubic-bezier(.4,0,.2,1)}
+.scroll{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
+.scroll::-webkit-scrollbar{display:none}
+.pad{padding:16px 18px 32px}
+.hdr{padding:calc(var(--st) + 10px) 18px 12px;background:rgba(255,255,255,.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,.85);display:flex;align-items:center;gap:12px;flex-shrink:0;z-index:5}
+.hdr-bk{width:38px;height:38px;border-radius:50%;background:var(--bx);border:1.5px solid var(--br);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:22px;color:var(--bd);line-height:1;flex-shrink:0;font-weight:700}
+.hdr-t{font-size:17px;font-weight:800;flex:1}
+.hdr-btn{padding:7px 15px;background:var(--blue);color:#fff;border-radius:20px;font-size:13px;font-weight:700;border:none;cursor:pointer;font-family:'Nunito',sans-serif}
+.hdr-btn.g{background:rgba(220,38,38,.1);color:var(--rd);border:1px solid rgba(220,38,38,.2)}
+.hh{padding:calc(var(--st) + 16px) 20px 20px;background:linear-gradient(135deg,#1a5db8 0%,#2a7de1 100%);flex-shrink:0}
+.hl{font-size:12px;font-weight:700;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:2px;margin-bottom:6px}
+.hg{font-size:22px;font-weight:800;color:#fff}
+.hs{font-size:13px;color:rgba(255,255,255,.65);margin-top:3px}
+#tb{display:flex;padding-bottom:var(--sb);background:rgba(255,255,255,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid rgba(255,255,255,.85);flex-shrink:0}
+.tb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;padding:9px 4px;border:none;background:none;position:relative;-webkit-appearance:none}
+.tb .ti{font-size:19px;transition:transform .18s}
+.tb .tl{font-size:9px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.3px}
+.tb.on .tl{color:var(--blue)}
+.tb.on .ti{transform:scale(1.1)}
+.tb.on::after{content:'';position:absolute;bottom:0;left:22%;right:22%;height:2.5px;background:var(--blue);border-radius:2px 2px 0 0}
+.tp{display:none;flex:1;flex-direction:column;overflow:hidden;min-height:0}
+.tp.on{display:flex}
+.card{background:var(--card);border:1.5px solid rgba(255,255,255,.95);border-radius:var(--r);padding:16px;box-shadow:var(--sh)}
+.ss{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.sbox{background:var(--card);border:1.5px solid rgba(255,255,255,.95);border-radius:14px;padding:16px;box-shadow:var(--sh)}
+.sn{font-size:34px;font-weight:800;color:var(--blue)}
+.slb{font-size:12px;color:var(--mu);margin-top:2px;font-weight:600}
+.mr{background:var(--card);border:1.5px solid rgba(255,255,255,.95);border-radius:var(--r);padding:14px 15px;display:flex;align-items:center;gap:13px;cursor:pointer;box-shadow:var(--sh);margin-bottom:10px}
+.mi{width:44px;height:44px;border-radius:12px;background:var(--bx);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;border:1px solid var(--br)}
+.mn{font-size:15px;font-weight:800}
+.ms{font-size:12px;color:var(--t2);margin-top:2px;font-weight:600}
+.mti{font-size:11px;color:var(--blue);margin-top:3px;font-weight:700}
+.fg{margin-bottom:14px}
+.fl{font-size:11px;font-weight:800;color:var(--t2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;display:block}
+.fr{background:var(--fi);border:1.5px solid var(--br);border-radius:12px;padding:12px 14px;display:flex;align-items:center;transition:border-color .15s;gap:10px}
+.fr:focus-within{border-color:var(--blue)}
+.fr input,.fr select,.fr textarea{flex:1;background:transparent;border:none;outline:none;font-family:'Nunito',sans-serif;font-size:15px;font-weight:600;color:var(--tx);-webkit-appearance:none;width:100%;min-height:0}
+.fr textarea{resize:none}
+.fr input::placeholder,.fr textarea::placeholder{color:var(--mu);font-weight:500}
+.fr select option{background:#fff}
+input[type="time"]{color-scheme:light;font-size:15px}
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:9px}
+.chip{background:var(--bl);border:1.5px solid rgba(42,125,225,.25);border-radius:20px;padding:5px 12px;font-size:12px;font-weight:700;color:var(--bd);display:flex;align-items:center;gap:5px}
+.crm{cursor:pointer;color:var(--mu);font-size:16px;line-height:1;padding:0 2px}
+.tar{display:flex;gap:9px;align-items:center}
+.tar input[type="time"]{flex:1;background:var(--fi);border:1.5px solid var(--br);border-radius:10px;padding:11px 13px;font-family:'Nunito',sans-serif;font-size:15px;font-weight:600;color:var(--tx);outline:none;-webkit-appearance:none;color-scheme:light}
+.tar input[type="time"]:focus{border-color:var(--blue)}
+.uz{background:var(--fi);border:2px dashed var(--br);border-radius:13px;cursor:pointer;position:relative;overflow:hidden;transition:border-color .15s;display:flex;align-items:center;justify-content:space-between;padding:14px 16px}
+.uz input[type="file"]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.uzl{font-size:14px;font-weight:700;color:var(--t2)}
+.uzc{width:40px;height:40px;background:var(--blue);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.up{width:100%;max-height:120px;object-fit:contain;border-radius:8px;display:none;background:var(--fi);padding:5px}
+.uz.filled .uzl,.uz.filled .uzc{display:none}
+.uz.filled{padding:0}
+.uz.filled .up{display:block}
+.sb2{background:var(--fi);border:2px dashed var(--br);border-radius:13px;padding:24px 16px;text-align:center;cursor:pointer;position:relative;overflow:hidden}
+.sb2 input[type="file"]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.sbi{font-size:32px;margin-bottom:7px;opacity:.5}
+.sbt{font-size:13px;color:var(--mu);font-weight:600}
+.sbp{width:100%;max-height:130px;object-fit:contain;border-radius:8px;display:none}
+.sb2.filled .sbi,.sb2.filled .sbt{display:none}
+.sb2.filled .sbp{display:block}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:15px;border-radius:13px;border:none;font-family:'Nunito',sans-serif;font-size:15px;font-weight:800;cursor:pointer;-webkit-appearance:none}
+.btn-b{background:var(--blue);color:#fff;box-shadow:0 3px 14px rgba(42,125,225,.32)}
+.btn-b:disabled{opacity:.5}
+.btn-g{background:var(--bx);border:1.5px solid var(--br);color:var(--tx)}
+.btn-r{background:var(--rb);border:1.5px solid rgba(220,38,38,.2);color:var(--rd)}
+.bsm{padding:10px 16px;border-radius:10px;font-size:13px;font-weight:800;border:none;cursor:pointer;font-family:'Nunito',sans-serif;-webkit-appearance:none}
+.bsmb{background:var(--blue);color:#fff}
+.dr{background:var(--fi);border:1.5px solid var(--br);border-radius:11px;padding:13px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px}
+.dri{font-size:18px;flex-shrink:0}
+.drb{flex:1;min-width:0}
+.drl{font-size:11px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.6px}
+.drv{font-size:14px;font-weight:700;color:var(--tx);margin-top:1px}
+.dra{color:var(--blue);font-size:22px;font-weight:700;cursor:pointer;flex-shrink:0;padding:4px}
+.vb{border-radius:var(--r);padding:22px 18px;text-align:center;margin-bottom:14px}
+.vb.match{background:var(--gb);border:2px solid #86efac}
+.vb.mismatch{background:var(--rb);border:2px solid #fca5a5}
+.vb.loading{background:var(--bl);border:2px solid #93c5fd}
+.vb.error{background:var(--ab);border:2px solid #fcd34d}
+.vc{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 13px;font-size:30px;font-weight:800}
+.vb.match .vc{background:var(--gn);color:#fff}
+.vb.mismatch .vc{background:var(--rd);color:#fff}
+.vb.loading .vc{background:var(--blue);color:#fff}
+.vb.error .vc{background:var(--am);color:#fff}
+.vtt{font-size:19px;font-weight:800;margin-bottom:7px}
+.vr{font-size:13px;color:var(--t2);line-height:1.6;font-weight:500}
+.vtp{margin-top:10px;font-size:12px;background:rgba(255,255,255,.6);border-radius:8px;padding:8px 12px;color:var(--t2);font-weight:600}
+.rr{background:var(--fi);border:1.5px solid var(--br);border-radius:11px;padding:13px 14px;margin-bottom:8px;display:flex;align-items:center}
+.rrl{flex:1}
+.rrla{font-size:11px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.6px}
+.rrlv{font-size:13px;font-weight:700;color:var(--tx);margin-top:2px}
+.rrls{font-size:11px;color:var(--mu);margin-top:2px;font-weight:500}
+.rb{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;flex-shrink:0}
+.rb.ok{background:var(--gb);color:var(--gn)}
+.rb.warn{background:var(--rb);color:var(--rd)}
+.rb.na{background:var(--fi);color:var(--mu);border:1.5px solid var(--br)}
+/* CHAT */
+.chat-wrap{display:flex;flex-direction:column;flex:1;overflow:hidden;min-height:0}
+.cm{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px;-webkit-overflow-scrolling:touch}
+.cm::-webkit-scrollbar{display:none}
+.msg{max-width:85%;display:flex;flex-direction:column;gap:3px}
+.msg.u{align-self:flex-end;align-items:flex-end}
+.msg.b{align-self:flex-start;align-items:flex-start}
+.bbl{padding:11px 14px;border-radius:18px;font-size:14px;line-height:1.55;font-weight:500}
+.msg.u .bbl{background:var(--blue);color:#fff;border-bottom-right-radius:4px}
+.msg.b .bbl{background:var(--card);border:1.5px solid rgba(255,255,255,.9);color:var(--tx);border-bottom-left-radius:4px;box-shadow:var(--sh)}
+.mst{font-size:10px;color:var(--mu);padding:0 4px;font-weight:600}
+.cbar{padding:10px 14px calc(var(--sb) + 10px);background:rgba(255,255,255,.9);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid rgba(255,255,255,.85);display:flex;gap:9px;align-items:flex-end;flex-shrink:0}
+.ci{flex:1;background:var(--fi);border:1.5px solid var(--br);border-radius:22px;padding:11px 15px;font-size:15px;font-family:'Nunito',sans-serif;color:var(--tx);outline:none;resize:none;max-height:90px;line-height:1.4;font-weight:600;-webkit-appearance:none}
+.ci:focus{border-color:var(--blue)}
+.cs{width:42px;height:42px;border-radius:50%;background:var(--blue);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff;font-size:19px;-webkit-appearance:none}
+.cs:disabled{opacity:.45}
+.td{display:flex;gap:4px;padding:2px 0}
+.td span{width:7px;height:7px;border-radius:50%;background:var(--mu);animation:tdot 1.2s infinite}
+.td span:nth-child(2){animation-delay:.2s}
+.td span:nth-child(3){animation-delay:.4s}
+@keyframes tdot{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-6px)}}
+/* AGENT TAB SPECIFIC */
+.agent-hdr{background:linear-gradient(135deg,#1a5db8 0%,#2a7de1 100%);padding:calc(var(--st) + 14px) 20px 16px;flex-shrink:0}
+.agent-title{font-size:20px;font-weight:800;color:#fff}
+.agent-sub{font-size:13px;color:rgba(255,255,255,.7);margin-top:3px}
+.agent-badge{display:inline-block;background:rgba(255,255,255,.2);color:#fff;font-size:10px;font-weight:800;padding:3px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:.8px;margin-top:8px}
+.quick-prompts{display:flex;flex-wrap:wrap;gap:8px;padding:12px 16px;background:rgba(255,255,255,.5);border-bottom:1px solid var(--br)}
+.qp{background:var(--card);border:1.5px solid var(--br);border-radius:20px;padding:7px 14px;font-size:12px;font-weight:700;color:var(--bd);cursor:pointer;white-space:nowrap;font-family:'Nunito',sans-serif;-webkit-appearance:none;border:none}
+/* NOTIFS */
+.nr{background:var(--card);border:1.5px solid rgba(255,255,255,.9);border-radius:13px;padding:13px 14px;margin-bottom:9px;display:flex;gap:11px;box-shadow:var(--sh)}
+.nd{width:9px;height:9px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.nd.blue{background:var(--blue)}.nd.green{background:var(--gn)}.nd.red{background:var(--rd)}.nd.gray{background:var(--mu)}
+.nt{font-size:14px;font-weight:700}
+.nb2{font-size:12px;color:var(--t2);margin-top:2px;line-height:1.45;font-weight:500}
+.nw{font-size:11px;color:var(--mu);margin-top:4px;font-weight:600}
+.pb{background:var(--ab);border:1.5px solid #fcd34d;border-radius:var(--r);padding:14px 16px;margin-bottom:14px}
+.pb h3{font-size:14px;font-weight:800;color:var(--am);margin-bottom:4px}
+.pb p{font-size:13px;color:#92400e;margin-bottom:12px;line-height:1.5;font-weight:500}
+.sec{font-size:11px;font-weight:800;color:var(--mu);text-transform:uppercase;letter-spacing:1px;margin:16px 0 9px}
+.mb{position:fixed;inset:0;background:rgba(10,25,55,.45);z-index:300;display:flex;align-items:flex-end;opacity:0;pointer-events:none;transition:opacity .26s}
+.mb.open{opacity:1;pointer-events:all}
+.ms2{background:#eaf3fb;border-radius:22px 22px 0 0;padding:16px 20px calc(var(--sb) + 20px);width:100%;transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);max-height:90vh;overflow-y:auto}
+.mb.open .ms2{transform:translateY(0)}
+.mh{width:40px;height:4px;background:var(--br);border-radius:99px;margin:0 auto 16px}
+.mt2{font-size:17px;font-weight:800;margin-bottom:14px}
+.empty{text-align:center;padding:48px 16px}
+.ei{font-size:44px;opacity:.3;margin-bottom:12px}
+.ett{font-size:16px;font-weight:800}
+.es{font-size:13px;color:var(--mu);margin-top:5px;line-height:1.6;font-weight:500}
+.sp{width:20px;height:20px;border:3px solid rgba(42,125,225,.2);border-top-color:var(--blue);border-radius:50%;animation:spin .65s linear infinite;display:inline-block;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+.sn2{font-size:11px;color:var(--mu);text-align:center;padding:5px 0 2px;font-weight:600}
+.tag{display:inline-flex;align-items:center;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:800;text-transform:uppercase}
+.tgb{background:var(--bl);color:var(--bd)}
+#toast{position:fixed;bottom:calc(72px + var(--sb));left:50%;transform:translateX(-50%) translateY(12px);background:var(--tx);color:#fff;border-radius:22px;padding:12px 22px;font-size:13px;font-weight:700;opacity:0;transition:all .26s;z-index:9999;pointer-events:none;max-width:88vw;text-align:center;white-space:nowrap}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast.ok{background:var(--gn)}
+#toast.err{background:var(--rd)}
+#toast.info{background:var(--blue)}
+.ri{width:100%;height:88px;object-fit:contain;border-radius:9px;background:var(--fi);padding:4px;border:1.5px solid var(--br)}
+.cfb{width:100%;padding:15px;background:var(--blue);color:#fff;border:none;border-radius:13px;font-size:15px;font-weight:800;font-family:'Nunito',sans-serif;cursor:pointer;margin-bottom:10px;-webkit-appearance:none}
+.rpl{display:block;text-align:center;font-size:13px;font-weight:700;color:var(--rd);cursor:pointer;padding:6px;margin-bottom:8px}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.fu{animation:fadeUp .3s ease forwards}
+.d1{animation-delay:.04s;opacity:0}.d2{animation-delay:.08s;opacity:0}.d3{animation-delay:.12s;opacity:0}.d4{animation-delay:.16s;opacity:0}.d5{animation-delay:.2s;opacity:0}
+</style>
+</head>
+<body>
+<div id="app">
+<div id="st">
+
+  <!-- HOME TAB -->
+  <div id="t-home" class="tp on">
+    <div class="hh"><div class="hl">RxVerify</div><div class="hg" id="hgreet">Good morning</div><div class="hs" id="hdate"></div></div>
+    <div class="scroll"><div class="pad">
+      <div class="ss fu d1"><div class="sbox"><div class="sn" id="st-total">0</div><div class="slb">Medications</div></div><div class="sbox"><div class="sn" id="st-verified">0</div><div class="slb">Verified Today</div></div></div>
+      <div class="sec fu d2">Today's Schedule</div>
+      <div id="home-sched" class="fu d3"></div>
+      <div class="sec fu d4">Quick Actions</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px" class="fu d5">
+        <div class="card" style="cursor:pointer;text-align:center;padding:16px 8px" onclick="goTab('t-meds');setTimeout(()=>pushScreen('s-add'),140)"><div style="font-size:26px;margin-bottom:6px">➕</div><div style="font-size:12px;font-weight:800;color:var(--t2)">Add Medication</div></div>
+        <div class="card" style="cursor:pointer;text-align:center;padding:16px 8px" onclick="goTab('t-agent')"><div style="font-size:26px;margin-bottom:6px">🤖</div><div style="font-size:12px;font-weight:800;color:var(--t2)">AI Assistant</div></div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- MEDICATIONS TAB -->
+  <div id="t-meds" class="tp">
+    <div class="hdr"><div style="flex:1"><div style="font-size:11px;color:var(--mu);text-transform:uppercase;letter-spacing:.8px;font-weight:700">My</div><div style="font-size:19px;font-weight:800">Medications</div></div><button class="hdr-btn" onclick="pushScreen('s-add')">＋ Add</button></div>
+    <div class="scroll"><div class="pad"><div id="meds-list"></div></div></div>
+  </div>
+
+  <!-- AI AGENT TAB -->
+  <div id="t-agent" class="tp">
+    <div class="agent-hdr">
+      <div class="agent-title">🤖 RxAgent</div>
+      <div class="agent-sub">Your personal medication AI assistant</div>
+      <div class="agent-badge">Powered by Claude AI</div>
+    </div>
+    <div class="quick-prompts">
+      <button class="qp" onclick="quickPrompt('What are common drug interactions I should know about?')">⚠️ Drug interactions</button>
+      <button class="qp" onclick="quickPrompt('What side effects should I watch out for with my medications?')">💊 Side effects</button>
+      <button class="qp" onclick="quickPrompt('Can I take my medications with food or alcohol?')">🍽️ Food & alcohol</button>
+      <button class="qp" onclick="quickPrompt('What should I do if I miss a dose?')">❓ Missed dose</button>
+      <button class="qp" onclick="quickPrompt('Give me a summary of all my current medications.')">📋 My meds summary</button>
+    </div>
+    <div class="chat-wrap">
+      <div class="cm" id="agent-msgs">
+        <div class="msg b fu"><div class="bbl">🤖 Hi! I'm RxAgent, your AI medication assistant.<br><br>I know your saved medications and can answer questions about:<br>• Side effects &amp; warnings<br>• Drug interactions<br>• Dosage &amp; timing<br>• Food &amp; alcohol interactions<br>• General medication questions<br><br>What would you like to know?</div><div class="mst">Now</div></div>
+      </div>
+      <div class="cbar">
+        <textarea class="ci" id="agent-in" placeholder="Ask anything about your medications…" rows="1" onkeydown="agentKey(event)"></textarea>
+        <button class="cs" id="agent-send" onclick="sendAgent()">↑</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- NOTIFICATIONS TAB -->
+  <div id="t-notifs" class="tp">
+    <div class="hdr"><div style="flex:1"><div style="font-size:11px;color:var(--mu);text-transform:uppercase;letter-spacing:.8px;font-weight:700">Alerts</div><div style="font-size:19px;font-weight:800">Notifications</div></div><button class="hdr-btn g" onclick="clearNotifs()">Clear All</button></div>
+    <div class="scroll"><div class="pad">
+      <div id="notif-perm" class="pb" style="display:none"><h3>🔔 Enable Reminders</h3><p>Get browser notifications at your scheduled dose times.</p><button class="btn btn-b" style="padding:12px" onclick="enableNotifs()">Enable Notifications</button></div>
+      <div id="notif-list"></div>
+    </div></div>
+  </div>
+
+  <!-- TAB BAR -->
+  <div id="tb">
+    <button class="tb on" id="tb-home"   onclick="goTab('t-home')"><span class="ti">🏠</span><span class="tl">Home</span></button>
+    <button class="tb"    id="tb-meds"   onclick="goTab('t-meds')"><span class="ti">💊</span><span class="tl">Meds</span></button>
+    <button class="tb"    id="tb-agent"  onclick="goTab('t-agent')"><span class="ti">🤖</span><span class="tl">Agent</span></button>
+    <button class="tb"    id="tb-notifs" onclick="goTab('t-notifs')"><span class="ti">🔔</span><span class="tl">Alerts</span></button>
+  </div>
+</div>
+
+<!-- ADD SCREEN -->
+<div id="s-add" class="screen">
+  <div class="hdr"><div class="hdr-bk" onclick="popScreen()">‹</div><div class="hdr-t">Add Medication</div></div>
+  <div class="scroll"><div class="pad">
+    <div class="sn2">← Swipe from left edge to go back</div>
+    <div class="fg"><label class="fl">Medication Name *</label><div class="fr"><input type="text" id="a-name" placeholder="e.g. Tylenol, Aspirin" autocomplete="off"></div></div>
+    <div class="fg"><label class="fl">Dosage *</label><div class="fr"><input type="text" id="a-dose" placeholder="e.g. 500mg, 10ml" autocomplete="off"></div></div>
+    <div class="fg"><label class="fl">Form</label><div class="fr"><select id="a-form"><option value="pill">💊 Pill / Tablet / Capsule</option><option value="liquid">🧴 Liquid / Syrup</option><option value="injection">💉 Injection / Syringe</option><option value="inhaler">💨 Inhaler</option><option value="patch">🩹 Patch / Topical</option><option value="other">Other</option></select></div></div>
+    <div class="fg"><label class="fl">Patient Name</label><div class="fr"><input type="text" id="a-patient" placeholder="Optional" autocomplete="off"></div></div>
+    <div class="fg"><label class="fl">Notes / Instructions</label><div class="fr"><textarea id="a-notes" rows="2" placeholder="e.g. Take with food…"></textarea></div></div>
+    <div class="fg"><label class="fl">Daily Dose Times</label><div class="chips" id="a-chips"></div><div class="tar"><input type="time" id="a-time" value="09:00"><button class="bsm bsmb" onclick="addChip()">+ Add Time</button></div><div style="font-size:11px;color:var(--mu);margin-top:7px;font-weight:600">You'll receive a browser notification at each time daily.</div></div>
+    <div class="fg"><label class="fl">Reference — Bottle Label Photo</label><div class="uz" id="ab-z"><input type="file" accept="image/*" capture="environment" onchange="handleImg(this,'ab')"><span class="uzl">Upload Bottle Label</span><div class="uzc">📷</div><img class="up" id="ab-p"></div></div>
+    <div class="fg"><label class="fl">Reference — Pill / Medication Photo</label><div class="uz" id="ap-z"><input type="file" accept="image/*" capture="environment" onchange="handleImg(this,'ap')"><span class="uzl">Upload Pill Photo</span><div class="uzc">📷</div><img class="up" id="ap-p"></div></div>
+    <button class="btn btn-b" onclick="saveMed()">Save Medication</button>
+    <div style="height:20px"></div>
+  </div></div>
+</div>
+
+<!-- DETAIL SCREEN -->
+<div id="s-detail" class="screen">
+  <div class="hdr"><div class="hdr-bk" onclick="popScreen()">‹</div><div class="hdr-t" id="d-title">Medication</div><button class="hdr-btn" onclick="openEdit()">Edit</button></div>
+  <div class="scroll"><div class="pad" id="d-body"></div></div>
+</div>
+
+<!-- VERIFY SCREEN -->
+<div id="s-verify" class="screen">
+  <div class="hdr"><div class="hdr-bk" onclick="popScreen()">‹</div><div class="hdr-t">Verify Medication</div></div>
+  <div class="scroll"><div class="pad">
+    <div class="sn2">← Swipe from left edge to go back</div>
+    <div id="v-res"></div>
+    <div id="v-form">
+      <div class="card" style="margin-bottom:12px"><div style="font-size:15px;font-weight:800" id="v-lbl">Verifying…</div><div style="font-size:13px;color:var(--t2);margin-top:4px;font-weight:500;line-height:1.5">Upload current photos. AI compares them against your saved reference.</div></div>
+      <div id="v-refs" style="display:none;margin-bottom:12px"><div class="sec" style="margin-top:0">Your Saved Reference</div><div id="v-ref-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px"></div><div style="font-size:11px;color:var(--mu);text-align:center;margin-top:7px;font-weight:600">↑ Originals · Upload new photos below ↓</div></div>
+      <div class="sec" style="margin-top:0">Upload Current Photos</div>
+      <div class="fg"><label class="fl">Current Bottle Label</label><div class="sb2" id="vb-z"><input type="file" accept="image/*" capture="environment" onchange="handleImg(this,'vb')"><div class="sbi">📷</div><div class="sbt">Tap to photograph bottle label</div><img class="sbp" id="vb-p"></div></div>
+      <div class="fg"><label class="fl">Current Pill / Medication</label><div class="sb2" id="vp-z"><input type="file" accept="image/*" capture="environment" onchange="handleImg(this,'vp')"><div class="sbi">💊</div><div class="sbt">Tap to photograph pill or medication</div><img class="sbp" id="vp-p"></div></div>
+      <button class="btn btn-b" onclick="runVerify()" id="v-btn">🔍 Scan &amp; Verify</button>
+      <div style="height:20px"></div>
+    </div>
+  </div></div>
+</div>
+
+<!-- RESULTS SCREEN -->
+<div id="s-results" class="screen">
+  <div class="hdr"><div class="hdr-bk" onclick="popScreen()">‹</div><div class="hdr-t">Verification Results</div></div>
+  <div class="scroll"><div class="pad" id="res-body"></div></div>
+</div>
+
+<!-- EDIT MODAL -->
+<div id="edit-modal" class="mb" onclick="closeMbg(event)">
+  <div class="ms2">
+    <div class="mh"></div><div class="mt2">Edit Medication</div>
+    <div class="fg"><label class="fl">Name</label><div class="fr"><input type="text" id="e-name" autocomplete="off"></div></div>
+    <div class="fg"><label class="fl">Dosage</label><div class="fr"><input type="text" id="e-dose" autocomplete="off"></div></div>
+    <div class="fg"><label class="fl">Form</label><div class="fr"><select id="e-form"><option value="pill">💊 Pill / Tablet / Capsule</option><option value="liquid">🧴 Liquid / Syrup</option><option value="injection">💉 Injection / Syringe</option><option value="inhaler">💨 Inhaler</option><option value="patch">🩹 Patch / Topical</option><option value="other">Other</option></select></div></div>
+    <div class="fg"><label class="fl">Patient Name</label><div class="fr"><input type="text" id="e-patient" placeholder="Optional" autocomplete="off"></div></div>
+    <div class="fg"><label class="fl">Notes</label><div class="fr"><textarea id="e-notes" rows="2"></textarea></div></div>
+    <div class="fg"><label class="fl">Dose Times</label><div class="chips" id="e-chips"></div><div class="tar"><input type="time" id="e-time" value="09:00"><button class="bsm bsmb" onclick="addEChip()">+ Add</button></div></div>
+    <button class="btn btn-b" onclick="saveEdit()" style="margin-bottom:10px">Save Changes</button>
+    <button class="btn btn-r" onclick="deleteMed()">🗑 Delete Medication</button>
+    <div style="height:8px"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+</div>
+
+<script>
+'use strict';
+// ── CORS proxy for iPhone Safari (bypasses CORS restriction on static hosts) ──
+const API = async (body) => {
+  // Try direct first, fall back to proxy
+  const DIRECT = 'https://api.anthropic.com/v1/messages';
+  const PROXY  = 'https://corsproxy.io/?' + encodeURIComponent(DIRECT);
+  const headers = { 'Content-Type': 'application/json', 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' };
+  try {
+    const r = await fetch(DIRECT, { method:'POST', headers, body: JSON.stringify(body) });
+    if (r.ok) return r.json();
+    if (r.status !== 0) { const t = await r.text(); throw new Error(`${r.status}: ${t}`); }
+    throw new Error('CORS');
+  } catch(e) {
+    if (e.message === 'CORS' || e.message.includes('Failed to fetch') || e.message.includes('NetworkError')) {
+      const r2 = await fetch(PROXY, { method:'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({...body, headers_to_forward: headers}) });
+      if (!r2.ok) throw new Error('Proxy ' + r2.status);
+      return r2.json();
+    }
+    throw e;
+  }
+};
+
+// ── STATE ──
+const MK='rxv9m',NK='rxv9n',VK='rxv9v';
+let meds=JSON.parse(localStorage.getItem(MK)||'[]');
+let notifs=JSON.parse(localStorage.getItem(NQ=NK)||'[]');
+let vtd=JSON.parse(localStorage.getItem(VK)||'{}');
+let curId=null,aTimes=[],eTimes=[],imgs={},stack=[],timers=[],agentH=[],tx=0,ty=0;
+const IC={pill:'💊',liquid:'🧴',injection:'💉',inhaler:'💨',patch:'🩹',other:'🔵'};
+
+// ── NAV ──
+function pushScreen(id){
+  const root=document.getElementById('st'),next=document.getElementById(id);if(!next)return;
+  root.classList.add('pushed');
+  stack.forEach(s=>{const e=document.getElementById(s);if(e){e.classList.remove('active');e.classList.add('behind');}});
+  stack.push(id);requestAnimationFrame(()=>next.classList.add('active'));
+}
+function popScreen(){
+  if(!stack.length)return;
+  const id=stack.pop(),el=document.getElementById(id);
+  if(el)el.classList.remove('active','behind');
+  if(stack.length){const p=document.getElementById(stack[stack.length-1]);if(p){p.classList.add('active');p.classList.remove('behind');}}
+  else document.getElementById('st').classList.remove('pushed');
+}
+document.addEventListener('touchstart',e=>{tx=e.touches[0].clientX;ty=e.touches[0].clientY;},{passive:true});
+document.addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-tx,dy=Math.abs(e.changedTouches[0].clientY-ty);if(dx>72&&dy<55&&tx<52&&stack.length)popScreen();},{passive:true});
+
+function goTab(id){
+  document.querySelectorAll('.tp').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.tb').forEach(b=>b.classList.remove('on'));
+  document.getElementById(id)?.classList.add('on');
+  const m={'t-home':'tb-home','t-meds':'tb-meds','t-agent':'tb-agent','t-notifs':'tb-notifs'};
+  document.getElementById(m[id])?.classList.add('on');
+  if(id==='t-notifs')renderNotifs();
+}
+
+function toast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className='show '+type;clearTimeout(t._t);t._t=setTimeout(()=>t.className='',3000);}
+
+// ── IMAGE COMPRESS ──
+function handleImg(input,key){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const img=new Image();
+    img.onload=()=>{
+      const MAX=600;let w=img.width,h=img.height;
+      if(w>MAX||h>MAX){const sc=MAX/Math.max(w,h);w=Math.round(w*sc);h=Math.round(h*sc);}
+      const cv=document.createElement('canvas');cv.width=w;cv.height=h;
+      cv.getContext('2d').drawImage(img,0,0,w,h);
+      const comp=cv.toDataURL('image/jpeg',0.75);
+      imgs[key]=comp;
+      const prev=document.getElementById(key+'-p'),zone=document.getElementById(key+'-z');
+      if(prev){prev.src=comp;prev.style.display='block';}
+      if(zone)zone.classList.add('filled');
+    };
+    img.src=e.target.result;
+  };reader.readAsDataURL(file);
+}
+
+// ── CHIPS ──
+function addChip(){const v=document.getElementById('a-time').value;if(!v||aTimes.includes(v))return;aTimes.push(v);renderChips('a-chips',aTimes,'a');}
+function addEChip(){const v=document.getElementById('e-time').value;if(!v||eTimes.includes(v))return;eTimes.push(v);renderChips('e-chips',eTimes,'e');}
+function rmChip(p,i){if(p==='a'){aTimes.splice(i,1);renderChips('a-chips',aTimes,'a');}else{eTimes.splice(i,1);renderChips('e-chips',eTimes,'e');}}
+function renderChips(cid,arr,p){document.getElementById(cid).innerHTML=arr.map((t,i)=>`<div class="chip">${f12(t)}<span class="crm" onclick="rmChip('${p}',${i})">×</span></div>`).join('');}
+function f12(t){if(!t)return'';const[h,m]=t.split(':').map(Number);return`${h%12||12}:${String(m).padStart(2,'0')} ${h>=12?'PM':'AM'}`;}
+
+// ── SAVE MED ──
+function saveMed(){
+  const name=document.getElementById('a-name').value.trim();
+  const dose=document.getElementById('a-dose').value.trim();
+  if(!name){toast('Please enter a medication name','err');return;}
+  if(!dose){toast('Please enter the dosage','err');return;}
+  const tv=document.getElementById('a-time').value;
+  if(aTimes.length===0&&tv)aTimes.push(tv);
+  const med={id:Date.now().toString(),name,dose,form:document.getElementById('a-form').value,patient:document.getElementById('a-patient').value.trim(),notes:document.getElementById('a-notes').value.trim(),times:[...aTimes],bottleImg:imgs['ab']||null,pillImg:imgs['ap']||null,added:new Date().toISOString()};
+  meds.push(med);localStorage.setItem(MK,JSON.stringify(meds));scheduleMed(med);
+  pushNotif('💊 Medication added',`${med.name} ${med.dose} — ${med.times.length} reminder${med.times.length!==1?'s':''} set`,'blue');
+  ['a-name','a-dose','a-notes','a-patient'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('a-form').value='pill';
+  aTimes=[];renderChips('a-chips',aTimes,'a');
+  imgs['ab']=null;imgs['ap']=null;
+  ['ab','ap'].forEach(k=>{const p=document.getElementById(k+'-p'),z=document.getElementById(k+'-z');if(p){p.src='';p.style.display='none';}if(z)z.classList.remove('filled');});
+  renderMeds();updateHome();toast('✅ Medication saved!','ok');popScreen();
+}
+
+// ── RENDER MEDS ──
+function renderMeds(){
+  const el=document.getElementById('meds-list');
+  if(!meds.length){el.innerHTML=`<div class="empty"><div class="ei">💊</div><div class="ett">No medications yet</div><div class="es">Tap "+ Add" to add your first medication</div></div>`;return;}
+  el.innerHTML=meds.map((m,i)=>`<div class="mr fu" style="animation-delay:${i*.05}s;opacity:0" onclick="openDetail('${m.id}')"><div class="mi">${IC[m.form]||'💊'}</div><div style="flex:1;min-width:0"><div class="mn">${esc(m.name)}</div><div class="ms">${esc(m.dose)}${m.patient?' · '+esc(m.patient):''}</div>${m.times.length?`<div class="mti">${m.times.map(f12).join(' · ')}</div>`:''}</div><div style="color:var(--blue);font-size:22px;font-weight:700">›</div></div>`).join('');
+}
+
+// ── DETAIL ──
+function openDetail(id){
+  const m=meds.find(x=>x.id===id);if(!m)return;
+  curId=id;
+  document.getElementById('d-title').textContent=m.name;
+  const tv=m.times.length?`<span style="color:var(--blue);font-weight:800">${m.times.map(f12).join('  ·  ')}</span>`:`<span style="color:var(--mu);font-style:italic">None set — tap Edit</span>`;
+  document.getElementById('d-body').innerHTML=`
+    <div class="sn2">← Swipe to go back</div>
+    <div class="card fu" style="margin-bottom:10px">
+      <div style="display:flex;align-items:center;gap:13px;margin-bottom:14px">
+        <div class="mi" style="width:50px;height:50px;font-size:26px">${IC[m.form]||'💊'}</div>
+        <div style="flex:1"><div style="font-size:20px;font-weight:800">${esc(m.name)}</div><div style="font-size:13px;color:var(--t2);margin-top:2px;font-weight:600">${esc(m.dose)}</div><span class="tag tgb" style="margin-top:6px">${m.form}</span></div>
+      </div>
+      ${m.patient?`<div class="dr"><div class="dri">👤</div><div class="drb"><div class="drl">Patient</div><div class="drv">${esc(m.patient)}</div></div></div>`:''}
+      <div class="dr"><div class="dri">⏰</div><div class="drb"><div class="drl">Dose Times</div><div class="drv">${tv}</div></div><div class="dra" onclick="openEdit()">›</div></div>
+      ${m.notes?`<div class="dr"><div class="dri">📋</div><div class="drb"><div class="drl">Notes</div><div class="drv">${esc(m.notes)}</div></div></div>`:''}
+      <div class="dr"><div class="dri">📅</div><div class="drb"><div class="drl">Added</div><div class="drv">${new Date(m.added).toLocaleDateString()}</div></div></div>
+    </div>
+    ${m.bottleImg||m.pillImg?`<div class="sec fu">Reference Photos</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px" class="fu">${m.bottleImg?`<div><div style="font-size:11px;font-weight:700;color:var(--t2);margin-bottom:5px">📋 Bottle</div><img src="${m.bottleImg}" class="ri"></div>`:'<div></div>'}${m.pillImg?`<div><div style="font-size:11px;font-weight:700;color:var(--t2);margin-bottom:5px">💊 Pill</div><img src="${m.pillImg}" class="ri"></div>`:'<div></div>'}</div>`:''}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px" class="fu">
+      <button class="btn btn-b" onclick="openVerify('${m.id}')">🔍 Verify</button>
+      <button class="btn btn-g" onclick="openEdit()">✏️ Edit</button>
+    </div>
+    <button class="btn btn-g fu" style="margin-bottom:10px" onclick="askAgentAbout('${esc(m.name)}','${esc(m.dose)}')">🤖 Ask Agent About This</button>
+    <div class="sec fu">Manage</div>
+    <div class="card fu" style="padding:0;overflow:hidden">
+      ${srow('✏️','Edit Name & Dosage','Change name, dosage or form','openEdit()')}
+      ${srow('⏰','Edit Dose Times','Manage daily reminder times','openEdit()')}
+      ${srow('📋','Edit Notes','Update instructions','openEdit()')}
+      ${srow('🗑','Delete Medication','Permanently remove','confirmDel()')}
+    </div>
+    <div style="height:20px"></div>`;
+  pushScreen('s-detail');
+}
+function srow(ico,title,sub,action){return `<div onclick="${action}" style="padding:13px 15px;display:flex;align-items:center;gap:12px;cursor:pointer;border-bottom:1px solid rgba(42,125,225,.08)"><span style="font-size:19px">${ico}</span><div style="flex:1"><div style="font-size:14px;font-weight:700">${title}</div><div style="font-size:11px;color:var(--mu);margin-top:1px;font-weight:500">${sub}</div></div><span style="color:var(--blue);font-size:19px;font-weight:700">›</span></div>`;}
+function confirmDel(){if(confirm('Delete this medication?'))deleteMed();}
+function askAgentAbout(name,dose){goTab('t-agent');setTimeout(()=>{const i=document.getElementById('agent-in');i.value=`Tell me about ${name} ${dose} — side effects, interactions, and how to take it correctly`;i.focus();},200);}
+
+// ── VERIFY ──
+function openVerify(id){
+  const m=meds.find(x=>x.id===id);if(!m)return;
+  curId=id;
+  document.getElementById('v-lbl').textContent=`${m.name} · ${m.dose}`;
+  document.getElementById('v-res').innerHTML='';
+  document.getElementById('v-form').style.display='block';
+  const vb=document.getElementById('v-btn');vb.disabled=false;vb.innerHTML='🔍 Scan &amp; Verify';
+  imgs['vb']=null;imgs['vp']=null;
+  ['vb','vp'].forEach(k=>{const p=document.getElementById(k+'-p'),z=document.getElementById(k+'-z');if(p){p.src='';p.style.display='none';}if(z)z.classList.remove('filled');});
+  const refs=document.getElementById('v-refs'),grid=document.getElementById('v-ref-grid');
+  if(m.bottleImg||m.pillImg){
+    refs.style.display='block';
+    grid.innerHTML=`${m.bottleImg?`<div><div style="font-size:11px;font-weight:700;color:var(--t2);margin-bottom:5px">📋 Ref Label</div><img src="${m.bottleImg}" class="ri"></div>`:'<div></div>'}${m.pillImg?`<div><div style="font-size:11px;font-weight:700;color:var(--t2);margin-bottom:5px">💊 Ref Pill</div><img src="${m.pillImg}" class="ri"></div>`:'<div></div>'}`;
+  }else refs.style.display='none';
+  pushScreen('s-verify');
+}
+
+async function runVerify(){
+  const m=meds.find(x=>x.id===curId);if(!m)return;
+  const btn=document.getElementById('v-btn'),ra=document.getElementById('v-res');
+  if(!imgs['vb']&&!imgs['vp']){toast('Upload at least one photo first','err');return;}
+  btn.disabled=true;btn.innerHTML='<span class="sp"></span> Analyzing…';
+  ra.innerHTML=`<div class="vb loading"><div class="vc">🔍</div><div class="vtt">Checking…</div><div class="vr">Comparing your photos against the reference…</div></div>`;
+  ra.scrollIntoView({behavior:'smooth',block:'start'});
+  try{
+    const result=await doVerify(m,imgs['vb'],imgs['vp']);
+    showResults(result,m);
+  }catch(e){
+    console.error('Verify error:',e);
+    ra.innerHTML=`<div class="vb error"><div class="vc">⚠</div><div class="vtt">Error</div><div class="vr">${esc(e.message||'Could not reach AI. Check your internet connection.')}</div></div>`;
+    btn.disabled=false;btn.innerHTML='🔍 Try Again';
+  }
+}
+
+async function doVerify(med,newBottle,newPill){
+  const content=[];
+  let desc=`You are a medication safety verifier.\nMedication: name="${med.name}", dose="${med.dose}", form="${med.form}".\nImages in order:\n`;
+  let idx=0;
+  if(med.bottleImg){idx++;desc+=`Image ${idx}: REFERENCE bottle label (original saved by user)\n`;}
+  if(med.pillImg){idx++;desc+=`Image ${idx}: REFERENCE pill photo (original saved by user)\n`;}
+  if(newBottle){idx++;desc+=`Image ${idx}: NEW bottle label (user uploading now to verify)\n`;}
+  if(newPill){idx++;desc+=`Image ${idx}: NEW pill photo (user uploading now to verify)\n`;}
+  desc+=`\nCHECK 1 - LABEL: Compare ref label vs new label. Same drug name? Partial match ok. Blurry = try anyway. labelMatch: true/false/"na"\nCHECK 2 - FORM: Compare ref pill vs new pill. Same physical form? (solid/liquid/injection/inhaler/patch). Ignore color+background. formMatch: true/false/"na"\nDefault to match when uncertain. Mismatch only for clearly different drug or clearly different form type.\nReturn ONLY JSON: {"result":"match","labelMatch":true,"formMatch":true,"reason":"explanation","tip":"photo tip or empty"}`;
+  content.push({type:'text',text:desc});
+  const addImg=(b64)=>{const d=b64.includes(',')?b64.split(',')[1]:b64;content.push({type:'image',source:{type:'base64',media_type:'image/jpeg',data:d}});};
+  if(med.bottleImg)addImg(med.bottleImg);
+  if(med.pillImg)addImg(med.pillImg);
+  if(newBottle)addImg(newBottle);
+  if(newPill)addImg(newPill);
+  const data=await API({model:'claude-haiku-4-5-20251001',max_tokens:300,messages:[{role:'user',content}]});
+  const raw=data.content?.find(c=>c.type==='text')?.text||'{}';
+  const parsed=JSON.parse(raw.replace(/```json|```/g,'').trim());
+  if(parsed.result!=='mismatch')parsed.result='match';
+  return parsed;
+}
+
+function showResults(r,med){
+  const ok=r.result==='match';
+  const today=new Date().toDateString();
+  if(ok){if(!vtd[today])vtd[today]=[];if(!vtd[today].includes(med.id)){vtd[today].push(med.id);localStorage.setItem(VK,JSON.stringify(vtd));}updateHome();}
+  pushNotif(ok?'✅ Verified: '+med.name:'⚠️ Mismatch: '+med.name,r.reason||'',ok?'green':'red');
+  const lm=r.labelMatch,fm=r.formMatch;
+  const LR=lm==='na'?{c:'na',i:'—',v:'No reference label',s:`Checked against stored name "${med.name}"`}:lm?{c:'ok',i:'✓',v:'Label matches',s:`Confirms "${med.name}"`}:{c:'warn',i:'⚠',v:'Label mismatch',s:'Different medication names detected'};
+  const FR=fm==='na'?{c:'na',i:'—',v:'No reference photo',s:`Checked against stored form "${med.form}"`}:fm?{c:'ok',i:'✓',v:'Form matches',s:`Both are ${med.form}`}:{c:'warn',i:'⚠',v:'Form mismatch',s:'Different types (e.g. pill vs liquid)'};
+  document.getElementById('res-body').innerHTML=`
+    <div class="sn2">← Swipe to go back</div>
+    <div class="vb ${ok?'match':'mismatch'} fu"><div class="vc">${ok?'✓':'✗'}</div><div class="vtt">${ok?'Medication Verified':'Mismatch Detected'}</div><div class="vr">${esc(r.reason||'')}</div>${r.tip?`<div class="vtp">💡 ${esc(r.tip)}</div>`:''}</div>
+    <div class="rr fu"><div class="rrl"><div class="rrla">Medication</div><div class="rrlv">${esc(med.name)}</div></div><div class="rb ${ok?'ok':'warn'}">${ok?'✓':'⚠'}</div></div>
+    <div class="rr fu"><div class="rrl"><div class="rrla">Bottle Label Check</div><div class="rrlv">${LR.v}</div><div class="rrls">${LR.s}</div></div><div class="rb ${LR.c}">${LR.i}</div></div>
+    <div class="rr fu"><div class="rrl"><div class="rrla">Medication Form Check</div><div class="rrlv">${FR.v}</div><div class="rrls">${FR.s}</div></div><div class="rb ${FR.c}">${FR.i}</div></div>
+    <div class="rr fu"><div class="rrl"><div class="rrla">Dosage</div><div class="rrlv">${esc(med.dose)}</div></div><div class="rb ok">✓</div></div>
+    ${med.patient?`<div class="rr fu"><div class="rrl"><div class="rrla">Patient</div><div class="rrlv">${esc(med.patient)}</div></div><div class="rb ok">✓</div></div>`:''}
+    ${ok?`<button class="cfb fu" onclick="confirmDose('${med.id}')">✅ Confirm &amp; Log Dose</button>`:`<button class="cfb fu" style="background:var(--rd)" onclick="popScreen()">⚠️ Do Not Take — Review</button>`}
+    <span class="rpl fu" onclick="reportD('${med.id}')">Report Discrepancy</span>
+    <div style="height:20px"></div>`;
+  pushScreen('s-results');
+  toast(ok?'✅ Verified — safe to take!':'⚠️ Mismatch detected',ok?'ok':'err');
+}
+function confirmDose(id){const m=meds.find(x=>x.id===id);if(!m)return;pushNotif('✅ Dose confirmed',`${m.name} ${m.dose} logged`,'green');toast('✅ Dose logged!','ok');while(stack.length)popScreen();goTab('t-home');}
+function reportD(id){const m=meds.find(x=>x.id===id);if(!m)return;pushNotif('⚠️ Discrepancy reported',`${m.name} flagged`,'red');toast('Reported','err');}
+
+// ── EDIT / DELETE ──
+function openEdit(){
+  const m=meds.find(x=>x.id===curId);if(!m)return;
+  document.getElementById('e-name').value=m.name;
+  document.getElementById('e-dose').value=m.dose;
+  document.getElementById('e-form').value=m.form;
+  document.getElementById('e-patient').value=m.patient||'';
+  document.getElementById('e-notes').value=m.notes||'';
+  eTimes=[...(m.times||[])];renderChips('e-chips',eTimes,'e');
+  document.getElementById('edit-modal').classList.add('open');
+}
+function closeMbg(e){if(e.target===document.getElementById('edit-modal'))document.getElementById('edit-modal').classList.remove('open');}
+function saveEdit(){
+  const m=meds.find(x=>x.id===curId);if(!m)return;
+  m.name=document.getElementById('e-name').value.trim()||m.name;
+  m.dose=document.getElementById('e-dose').value.trim()||m.dose;
+  m.form=document.getElementById('e-form').value;
+  m.patient=document.getElementById('e-patient').value.trim();
+  m.notes=document.getElementById('e-notes').value.trim();
+  m.times=[...eTimes];
+  localStorage.setItem(MK,JSON.stringify(meds));scheduleMed(m);
+  document.getElementById('edit-modal').classList.remove('open');
+  popScreen();openDetail(curId);renderMeds();updateHome();toast('✅ Updated','ok');
+}
+function deleteMed(){
+  document.getElementById('edit-modal').classList.remove('open');
+  const name=meds.find(x=>x.id===curId)?.name||'medication';
+  meds=meds.filter(x=>x.id!==curId);localStorage.setItem(MK,JSON.stringify(meds));
+  timers=timers.filter(t=>{if(t.mid===curId){clearTimeout(t.tid);return false;}return true;});
+  while(stack.length)popScreen();renderMeds();updateHome();toast(name+' deleted');
+}
+
+// ── HOME ──
+function updateHome(){
+  const h=new Date().getHours();
+  document.getElementById('hgreet').textContent=h<12?'Good morning':h<17?'Good afternoon':'Good evening';
+  document.getElementById('hdate').textContent=new Date().toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});
+  document.getElementById('st-total').textContent=meds.length;
+  const today=new Date().toDateString();
+  document.getElementById('st-verified').textContent=(vtd[today]||[]).length;
+  const sched=document.getElementById('home-sched');
+  if(!meds.length){sched.innerHTML=`<div class="empty"><div class="ei">💊</div><div class="ett">No medications yet</div><div class="es">Add your first medication to see your daily schedule</div></div>`;return;}
+  const doses=[];meds.forEach(m=>(m.times||[]).forEach(t=>doses.push({m,t})));doses.sort((a,b)=>a.t.localeCompare(b.t));
+  if(!doses.length){sched.innerHTML=`<div class="card" style="color:var(--mu);font-size:13px;font-weight:600">No dose times set. Edit a medication to add reminders.</div>`;return;}
+  sched.innerHTML=doses.map(d=>`<div class="mr" onclick="openDetail('${d.m.id}')"><div class="mi" style="width:40px;height:40px;font-size:20px">${IC[d.m.form]||'💊'}</div><div style="flex:1;min-width:0"><div class="mn">${esc(d.m.name)}</div><div class="ms">${esc(d.m.dose)}</div></div><div style="font-size:13px;font-weight:800;color:var(--blue)">${f12(d.t)}</div></div>`).join('');
+}
+
+// ── NOTIFICATIONS ──
+async function enableNotifs(){
+  if(!('Notification'in window)){toast('Not supported in this browser','err');return;}
+  const p=await Notification.requestPermission();
+  if(p==='granted'){document.getElementById('notif-perm').style.display='none';toast('🔔 Notifications enabled!','ok');meds.forEach(m=>scheduleMed(m));}
+  else toast('Permission denied — enable in Safari Settings','err');
+}
+function checkNotifPerm(){if(!('Notification'in window))return;if(Notification.permission!=='granted')document.getElementById('notif-perm').style.display='block';}
+function scheduleMed(med){
+  if(!('Notification'in window)||Notification.permission!=='granted')return;
+  timers=timers.filter(t=>{if(t.mid===med.id){clearTimeout(t.tid);return false;}return true;});
+  (med.times||[]).forEach(ts=>{
+    const now=new Date(),[h,m]=ts.split(':').map(Number);
+    const tgt=new Date(now);tgt.setHours(h,m,0,0);
+    if(tgt<=now)tgt.setDate(tgt.getDate()+1);
+    const ms=tgt-now;
+    const tid=setTimeout(()=>{fireMedNotif(med,ts);const rt=setTimeout(()=>scheduleMed(med),1000);timers.push({mid:med.id,tid:rt});},ms);
+    timers.push({mid:med.id,tid});
+  });
+}
+function fireMedNotif(med,ts){
+  const title=`Time to take ${med.name}`,body=`${med.dose} — ${f12(ts)}`;
+  if(Notification.permission==='granted'){try{const n=new Notification(title,{body,icon:'💊',tag:`rxv-${med.id}-${ts}`});n.onclick=()=>{window.focus();goTab('t-meds');openDetail(med.id);};}catch(e){}}
+  pushNotif('🔔 '+title,body,'blue');toast('🔔 '+title,'info');
+}
+function pushNotif(title,body,color='gray'){notifs.unshift({id:Date.now().toString(),title,body,color,ts:new Date().toISOString()});if(notifs.length>60)notifs=notifs.slice(0,60);localStorage.setItem(NK,JSON.stringify(notifs));}
+function renderNotifs(){
+  const el=document.getElementById('notif-list');
+  if(!notifs.length){el.innerHTML=`<div class="empty"><div class="ei">🔔</div><div class="ett">No notifications yet</div><div class="es">Medication reminders and verification results appear here</div></div>`;return;}
+  el.innerHTML=notifs.map(n=>`<div class="nr fu"><div class="nd ${n.color||'gray'}"></div><div style="flex:1"><div class="nt">${esc(n.title)}</div>${n.body?`<div class="nb2">${esc(n.body)}</div>`:''}<div class="nw">${timeSince(n.ts)}</div></div></div>`).join('');
+}
+function clearNotifs(){notifs=[];localStorage.setItem(NK,'[]');renderNotifs();toast('Cleared');}
+function timeSince(iso){const s=Math.floor((Date.now()-new Date(iso))/1000);if(s<60)return'Just now';if(s<3600)return Math.floor(s/60)+'m ago';if(s<86400)return Math.floor(s/3600)+'h ago';return Math.floor(s/86400)+'d ago';}
+
+// ── AI AGENT ──
+function quickPrompt(text){document.getElementById('agent-in').value=text;sendAgent();}
+async function sendAgent(){
+  const inp=document.getElementById('agent-in'),text=inp.value.trim();if(!text)return;
+  const btn=document.getElementById('agent-send');inp.value='';inp.style.height='';btn.disabled=true;
+  appendAgentMsg('u',text);agentH.push({role:'user',content:text});
+  const typing=appendAgentTyping();
+  try{
+    const medSum=meds.length?meds.map(m=>`${m.name} ${m.dose} (${m.form})${m.patient?' for '+m.patient:''}${m.notes?' — '+m.notes:''}`).join('; '):'No medications saved yet.';
+    const sys=`You are RxAgent, a knowledgeable and friendly AI medication assistant built into RxVerify, a medication safety app.\n\nThe user's current medications: ${medSum}\n\nYou help with:\n- Medication information (what it treats, how it works)\n- Side effects and warnings\n- Drug-drug and drug-food interactions\n- Dosage and timing guidance\n- Missed dose advice\n- General medication safety questions\n\nBe warm, clear, and practical. Use plain language. Keep responses focused and under 180 words unless more detail is genuinely needed. Never diagnose medical conditions. Always recommend consulting a doctor or pharmacist for personal medical decisions.`;
+    const data=await API({model:'claude-haiku-4-5-20251001',max_tokens:600,system:sys,messages:agentH});
+    const reply=data.content?.find(c=>c.type==='text')?.text||"Sorry, I couldn't respond right now.";
+    typing.remove();appendAgentMsg('b',reply);agentH.push({role:'assistant',content:reply});
+    if(agentH.length>24)agentH=agentH.slice(-24);
+  }catch(e){typing.remove();appendAgentMsg('b',"I'm having trouble connecting. Please check your internet connection and try again.");}
+  btn.disabled=false;
+}
+function appendAgentMsg(role,text){
+  const w=document.getElementById('agent-msgs');
+  const d=document.createElement('div');d.className=`msg ${role} fu`;
+  d.innerHTML=`<div class="bbl">${esc(text).replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')}</div><div class="mst">${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div>`;
+  w.appendChild(d);w.scrollTop=w.scrollHeight;return d;
+}
+function appendAgentTyping(){
+  const w=document.getElementById('agent-msgs');
+  const d=document.createElement('div');d.className='msg b';
+  d.innerHTML=`<div class="bbl"><div class="td"><span></span><span></span><span></span></div></div>`;
+  w.appendChild(d);w.scrollTop=w.scrollHeight;return d;
+}
+function agentKey(e){
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendAgent();}
+  const ta=document.getElementById('agent-in');ta.style.height='auto';ta.style.height=Math.min(ta.scrollHeight,90)+'px';
+}
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function init(){
+  updateHome();renderMeds();renderNotifs();checkNotifPerm();
+  if('Notification'in window&&Notification.permission==='granted')meds.forEach(m=>scheduleMed(m));
+  const now=new Date(),toMid=new Date(now.getFullYear(),now.getMonth(),now.getDate()+1)-now;
+  setTimeout(()=>{vtd={};localStorage.setItem(VK,'{}');updateHome();},toMid);
+}
+init();
+</script>
+</body>
+</html>
